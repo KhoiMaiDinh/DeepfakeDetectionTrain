@@ -24,9 +24,9 @@ class CustomDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        feature = self.features[idx]
+        image = self.images[idx]
         label = self.labels[idx]
-        return feature, label
+        return image, label
 
 def calculate_target(path, original_target):
     cnn_sc=CNNmethod.validate(path)
