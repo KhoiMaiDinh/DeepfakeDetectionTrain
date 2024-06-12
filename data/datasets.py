@@ -58,7 +58,7 @@ def dataset_folder(root):
     
     for image, target in original_dset:
         images.append(image)
-        image_paths = original_dset.imgs[len(images)][0]
+        image_paths = original_dset.imgs[len(images) - 1][0]
         targets.append(calculate_target(image_paths, target))
     
     dset = CustomDataset(images, targets)
