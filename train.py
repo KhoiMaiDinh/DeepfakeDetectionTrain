@@ -20,6 +20,7 @@ import torch.utils.data as data
 from models.cnnDetection.validate import CNNmethod
 from models.selfblended.validate import SelfBlendedMethod
 from models.universalFake.validate import UniversalFakeMethod
+import torch.multiprocessing as mp
 
 
 class ViTForImageClassification(nn.Module):
@@ -48,6 +49,7 @@ if __name__ == '__main__':
     EPOCHS = 3
     BATCH_SIZE = 64
     LEARNING_RATE = 2e-5
+    mp.set_start_method('spawn')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     CNNmethod.load_model(device)
