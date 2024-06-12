@@ -17,6 +17,9 @@ from torch.autograd import Variable
 import torchvision
 import torchvision.transforms as transforms
 import torch.utils.data as data
+from models.cnnDetection.validate import CNNmethod
+from models.selfblended.validate import SelfBlendedMethod
+from models.universalFake.validate import UniversalFakeMethod
 
 
 class ViTForImageClassification(nn.Module):
@@ -46,6 +49,10 @@ if __name__ == '__main__':
     BATCH_SIZE = 64
     LEARNING_RATE = 2e-5
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
+    CNNmethod.load_model(device)
+    SelfBlendedMethod.load_model(device)
+    UniversalFakeMethod.load_model(device)
     
     train_set = get_dataset()
     data_loader = create_dataloader(train_set)

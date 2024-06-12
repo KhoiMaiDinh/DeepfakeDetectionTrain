@@ -87,7 +87,11 @@ def calculate_acc(y_true, y_pred, thres):
     return r_acc, f_acc, acc    
 
 class UniversalFakeMethod:
-    def __init__(self, device, arch="CLIP:ViT-L/14"):
+    model = None
+    device = None
+    
+    @classmethod
+    def load_model(cls, device, arch="CLIP:ViT-L/14"):
         model = get_model(arch)
         state_dict = torch.load("weights/fc_weights.pth", map_location='cpu')
         model.fc.load_state_dict(state_dict)
@@ -95,22 +99,21 @@ class UniversalFakeMethod:
         model.eval()
         model.to(device)
         
-        self.model = model
-        self.device = device
-        self.arch=arch
+        cls.model = model
+        cls.device = device
+        cls.arch=arch
 
-    def validate(self, img, find_thres=False):
-        
-        
-
-        img=transformImg(img, self.arch)
+    @classmethod
+    def validate(cls, img, find_thres=False):
+        if cls.model is None:
+            raise ValueError("Model not loaded. Call `load_model` first.")
+        img=transformImg(img, cls.arch)
         with torch.no_grad():
-            y_true, y_pred = [], []
             in_tens = img.unsqueeze(0)
-            in_tens = in_tens.to(self.device)
-            prob = self.model(in_tens).sigmoid().item()
+            in_tens = in_tens.to(cls.device)
+            prob = cls.model(in_tens).sigmoid().item()
 
-            print(prob)
+            print('Universal fakeness: {:.2f}%'.format(prob * 100))
         return prob
 
 def transformImg(img, arch="CLIP:ViT-L/14"):

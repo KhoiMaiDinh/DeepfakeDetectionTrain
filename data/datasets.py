@@ -11,17 +11,20 @@ from PIL import ImageFile
 from scipy.ndimage.filters import gaussian_filter
 import random
 import os
+from models.cnnDetection.validate import CNNmethod
+from models.selfblended.validate import SelfBlendedMethod
+from models.universalFake.validate import UniversalFakeMethod
 
 
 class SearchImageFolder(datasets.ImageFolder):
-    def __init__(self, root, cnn_val, self_blended_val, uni_val, transform=None, target_transform=None):
+    def __init__(self, root, transform=None, target_transform=None):
         super(SearchImageFolder, self).__init__(root, transform=transform, target_transform=target_transform)
         classes, class_to_idx = self._find_classes()
         self.classes = classes
         self.class_to_idx = class_to_idx
-        self.cnn_val = cnn_val
-        self.self_blended_val = self_blended_val
-        self.uni_val = uni_val
+        # self.cnn_val = cnn_val
+        # self.self_blended_val = self_blended_val
+        # self.uni_val = uni_val
         
     def _find_classes(self):
         classes = ['CNN', 'Self Blended', 'Universal Fake']
@@ -34,9 +37,9 @@ class SearchImageFolder(datasets.ImageFolder):
         original_img, target = super(SearchImageFolder, self).__getitem__(index)
         path, _ = self.samples[index]
         print(original_img)
-        cnn_sc=self.cnn_val(path)
-        sb_sc=self.self_blended_val(path)
-        uf_sc=self.uni_val(path)
+        cnn_sc=CNNmethod.validate(path)
+        sb_sc=SelfBlendedMethod.validate(path)
+        uf_sc=UniversalFakeMethod.validate(path)
         new_target=0
         if target == 1: 
             max_sc=max(cnn_sc, sb_sc, uf_sc)
@@ -50,9 +53,9 @@ class SearchImageFolder(datasets.ImageFolder):
             if min_sc == uf_sc: new_target=2
         return original_img, new_target
     
-def dataset_folder(root, cnnMethod, selfBlendedMethod, universalMethod):
+def dataset_folder(root):
     dset = SearchImageFolder(
-            root, cnnMethod, selfBlendedMethod, universalMethod,
+            root,
             transforms.Compose([
                 transforms.ToTensor(),
             ])

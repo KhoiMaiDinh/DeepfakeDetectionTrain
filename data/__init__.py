@@ -4,26 +4,14 @@ from torch.utils.data.sampler import WeightedRandomSampler
 import os
 from .datasets import dataset_folder
 
-from models.cnnDetection.validate import CNNmethod
-from models.selfblended.validate import SelfBlendedMethod
-from models.universalFake.validate import UniversalFakeMethod
 
 def get_dataset(parent_folder = "./datasets/train/progan" + '/'):
     dset_lst = []
     classes = os.listdir(parent_folder)
     print("get_dataset()")
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    cnnMethod = CNNmethod(device)
-    selfBlendedMethod = SelfBlendedMethod(device)
-    universalMethod = UniversalFakeMethod(device)
     for cls in classes:
         root = parent_folder + cls
-        dset = dataset_folder(
-            root, 
-            cnnMethod.validate, 
-            selfBlendedMethod.validate, 
-            universalMethod.validate
-        )
+        dset = dataset_folder(root)
         print(dset[0])
         print(dset.classes)
         dset_lst.append(dset)

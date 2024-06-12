@@ -22,7 +22,11 @@ import cv2
 warnings.filterwarnings('ignore')
 
 class SelfBlendedMethod:
-    def __init__(self, device):
+    model = None
+    device = None
+    
+    @classmethod
+    def load_model(cls, device):
         seed=1
         random.seed(seed)   
         torch.manual_seed(seed)
@@ -36,29 +40,33 @@ class SelfBlendedMethod:
         model.load_state_dict(cnn_sd)
         model.eval()
         
-        self.model=model
-        self.device=device
+        cls.model=model
+        cls.device=device
 
-    def validate(self, img):
+    @classmethod
+    def validate(cls, img):
+        if cls.model is None:
+            raise ValueError("Model not loaded. Call `load_model` first.")
+        
         frame = cv2.imread(img)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        face_detector = get_model("resnet50_2020-07-20", max_size=max(frame.shape),device=self.device)
+        face_detector = get_model("resnet50_2020-07-20", max_size=max(frame.shape),device=cls.device)
         face_detector.eval()
 
         face_list=extract_face(frame,face_detector)
 
         with torch.no_grad():
             if len(face_list) > 0:
-                img=torch.tensor(face_list).to(self.device).float()/255
+                img=torch.tensor(face_list).to(cls.device).float()/255
             else:
                 image_size=(380,380)
                 frame = cv2.resize( frame,dsize=image_size).transpose((2,0,1))
                 frames =[frame]
-                img=torch.tensor(frames).to(self.device).float()/255
-            pred=self.model(img).softmax(1)[:,1].cpu().data.numpy().tolist()
+                img=torch.tensor(frames).to(cls.device).float()/255
+            pred=cls.model(img).softmax(1)[:,1].cpu().data.numpy().tolist()
 
-        print(f'fakeness: {max(pred):.4f}')
+        print('Self blended fakeness: {:.2f}%'.format(max(pred) * 100))
         return max(pred)
 
 
