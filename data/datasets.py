@@ -19,9 +19,15 @@ class CustomDataset(Dataset):
     def __init__(self, images, labels):
         self.images = images
         self.labels = labels
+        self.classes, self.class_to_idx = self._find_classes()
 
     def __len__(self):
         return len(self.images)
+    
+    def _find_classes(self): 
+        classes = ["CNN", "Self Blended", "Universal Fake"]
+        class_to_idx = {classes[i]: i for i in range(len(classes))}
+        return classes, class_to_idx
 
     def __getitem__(self, idx):
         image = self.images[idx]
