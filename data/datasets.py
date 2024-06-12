@@ -9,57 +9,59 @@ from io import BytesIO
 from PIL import Image
 from PIL import ImageFile
 from scipy.ndimage.filters import gaussian_filter
-import random
-import os
+from torch.utils.data import DataLoader, Dataset
 from models.cnnDetection.validate import CNNmethod
 from models.selfblended.validate import SelfBlendedMethod
 from models.universalFake.validate import UniversalFakeMethod
 
 
-class SearchImageFolder(datasets.ImageFolder):
-    def __init__(self, root, transform=None, target_transform=None):
-        super(SearchImageFolder, self).__init__(root, transform=transform, target_transform=target_transform)
-        classes, class_to_idx = self._find_classes()
-        self.classes = classes
-        self.class_to_idx = class_to_idx
-        # self.cnn_val = cnn_val
-        # self.self_blended_val = self_blended_val
-        # self.uni_val = uni_val
-        
-    def _find_classes(self):
-        classes = ['CNN', 'Self Blended', 'Universal Fake']
-        classes.sort()
-        class_to_idx = {classes[i]: i for i in range(len(classes))}
-        # print(classes, class_to_idx)
-        return classes, class_to_idx
+class CustomDataset(Dataset):
+    def __init__(self, images, labels):
+        self.images = images
+        self.labels = labels
 
-    def __getitem__(self, index):
-        original_img, target = super(SearchImageFolder, self).__getitem__(index)
-        path, _ = self.samples[index]
-        print(original_img)
-        cnn_sc=CNNmethod.validate(path)
-        sb_sc=SelfBlendedMethod.validate(path)
-        uf_sc=UniversalFakeMethod.validate(path)
-        new_target=0
-        if target == 1: 
-            max_sc=max(cnn_sc, sb_sc, uf_sc)
-            if max_sc == cnn_sc: new_target=0
-            if max_sc == sb_sc: new_target=1
-            if max_sc == uf_sc: new_target=2
-        else: 
-            min_sc=min(cnn_sc, sb_sc, uf_sc)
-            if min_sc == cnn_sc: new_target=0
-            if min_sc == sb_sc: new_target=1
-            if min_sc == uf_sc: new_target=2
-        return original_img, new_target
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        feature = self.features[idx]
+        label = self.labels[idx]
+        return feature, label
+
+def calculate_target(path, original_target):
+    cnn_sc=CNNmethod.validate(path)
+    sb_sc=SelfBlendedMethod.validate(path)
+    uf_sc=UniversalFakeMethod.validate(path)
+    new_target=0
+    if original_target == 1: 
+        max_sc=max(cnn_sc, sb_sc, uf_sc)
+        if max_sc == cnn_sc: new_target=0
+        if max_sc == sb_sc: new_target=1
+        if max_sc == uf_sc: new_target=2
+    else: 
+        min_sc=min(cnn_sc, sb_sc, uf_sc)
+        if min_sc == cnn_sc: new_target=0
+        if min_sc == sb_sc: new_target=1
+        if min_sc == uf_sc: new_target=2
+    return new_target
     
 def dataset_folder(root):
-    dset = SearchImageFolder(
+    original_dset = datasets.ImageFolder(
             root,
             transforms.Compose([
                 transforms.ToTensor(),
             ])
             )
+    
+    images = []
+    targets = []
+    
+    for image, target in original_dset:
+        images.append(image)
+        image_paths = original_dset.imgs[len(images)][0]
+        targets.append(calculate_target(image_paths, target))
+    
+    dset = CustomDataset(images, targets)
     # dset = datasets.ImageFolder(
     #         root, 
     #         transforms.Compose([

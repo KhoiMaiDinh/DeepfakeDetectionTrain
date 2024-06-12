@@ -60,7 +60,7 @@ if __name__ == '__main__':
     data_loader = create_dataloader(train_set)
     test_set = get_dataset('datasets/test/progan/')
     test_loader  = create_dataloader(test_set)
-    model = ViTForImageClassification(2).to(device)    
+    model = ViTForImageClassification(3).to(device)    
     # Feature Extractor
     model_name_or_path = 'google/vit-base-patch16-224-in21k'
     processor = ViTImageProcessor.from_pretrained(model_name_or_path)
